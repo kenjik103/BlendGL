@@ -18,7 +18,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void process_input(GLFWwindow *window);
-unsigned int loadTexture(char const *path);
+unsigned int loadTexture(char const *path, GLfloat wrapping_method);
 
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 600;
@@ -188,10 +188,13 @@ int main(int argc, char *argv[]) {
   
   //enable polygon mode
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-  unsigned int cubeTexture  = loadTexture((projectRoot / "textures" / "marble.jpg").c_str());
-  unsigned int floorTexture = loadTexture((projectRoot /  "textures" / "metal.png").c_str());
+  unsigned int cubeTexture  = loadTexture((projectRoot / "textures" / "marble.jpg").c_str(),
+					  GL_REPEAT);
+  unsigned int floorTexture = loadTexture((projectRoot /  "textures" / "metal.png").c_str(),
+					  GL_REPEAT);
   unsigned int transparentTexture =
-    loadTexture((projectRoot / "textures" / "grass.png").c_str());
+    loadTexture((projectRoot / "textures" / "grass.png").c_str(),
+		GL_CLAMP_TO_EDGE);
 
   // transparent vegetation locations
   // --------------------------------
@@ -322,7 +325,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset){
   camera.ProcessMouseScroll(yoffset);
 }
 
-unsigned int loadTexture(char const *path)
+unsigned int loadTexture(char const *path, GLfloat wrapping_method)
 {
     unsigned int textureID;
     glGenTextures(1, &textureID);
@@ -343,8 +346,8 @@ unsigned int loadTexture(char const *path)
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapping_method);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapping_method);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
