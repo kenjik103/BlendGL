@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <map>
 
 #include "camera.h"
 #include "glm/detail/type_mat.hpp"
@@ -75,6 +76,8 @@ int main(int argc, char *argv[]) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   //=============================SHADER INITIALIZATION===========================
  
   fs::path shaderRoot = srcRoot / "shaders";
@@ -192,19 +195,17 @@ int main(int argc, char *argv[]) {
 					  GL_REPEAT);
   unsigned int floorTexture = loadTexture((projectRoot /  "textures" / "metal.png").c_str(),
 					  GL_REPEAT);
-  unsigned int transparentTexture =
-    loadTexture((projectRoot / "textures" / "grass.png").c_str(),
+  unsigned int windowTexture =
+    loadTexture((projectRoot / "textures" / "blending_transparent_window.png").c_str(),
 		GL_CLAMP_TO_EDGE);
 
-  // transparent vegetation locations
+  //  window locations
   // --------------------------------
-  std::vector<glm::vec3> vegetation 
+  std::vector<glm::vec3> windows
     {
-      glm::vec3(-1.5f, 0.0f, -0.48f),
-      glm::vec3( 1.5f, 0.0f, 0.51f),
-      glm::vec3( 0.0f, 0.0f, 0.7f),
-      glm::vec3(-0.3f, 0.0f, -2.3f),
-      glm::vec3 (0.5f, 0.0f, -0.6f)
+      glm::vec3(-0.7f, 0.0f, -0.92f),
+      glm::vec3( 0.0f, 0.0f, 1.0f),
+      glm::vec3 (0.8f, 0.0f, -1.0f)
     };
 
   shader.use();
@@ -251,22 +252,21 @@ int main(int argc, char *argv[]) {
     shader.setMat4("model", glm::mat4(1.0f));
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    //vegitation
+    //windows
     glBindVertexArray(transparentVAO);
-    glBindTexture(GL_TEXTURE_2D, transparentTexture);
-    for (unsigned int i = 0; i < vegetation.size(); ++i){
+    glBindTexture(GL_TEXTURE_2D, windowTexture);
+    std::map <float, glm::vec3> sorted;
+    for (unsigned int i = 0; i < windows.size(); ++i){
+      float distance = glm::length(camera.Position - windows[i]);
+      sorted[distance] = windows[i];
+    }
+    for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); //ew
+	 it != sorted.rend();
+	 ++it){
       model = glm::mat4(1.0f);
-      model = glm::translate(model, vegetation[i]);
-      shader.setMat4("model", model);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
-
-      model = glm::mat4(1.0f);
-      model = glm::translate(model, vegetation[i]);
-      // Move to center of geometry
-      model = glm::translate(model, glm::vec3(0.5f, 0.0f, 0.0f));
-      model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-      // Move back
-      model = glm::translate(model, glm::vec3(-0.5f, 0.0f, 0.0f));
+      //NOTE: 'first' refers to the key, 'second' refers to the value. in this
+      //case 'second' is a glm::vec3
+      model = glm::translate(model, it->second);
       shader.setMat4("model", model);
       glDrawArrays(GL_TRIANGLES, 0, 6);
     }
