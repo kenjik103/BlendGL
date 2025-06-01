@@ -11,6 +11,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/norm.hpp"
 #include "model.h"
 #include "shader.h"
 #include "stb_image.h"
@@ -257,7 +258,7 @@ int main(int argc, char *argv[]) {
     glBindTexture(GL_TEXTURE_2D, windowTexture);
     std::map <float, glm::vec3> sorted;
     for (unsigned int i = 0; i < windows.size(); ++i){
-      float distance = glm::length(camera.Position - windows[i]);
+      float distance = glm::length2(camera.Position - windows[i]);
       sorted[distance] = windows[i];
     }
     for (std::map<float, glm::vec3>::reverse_iterator it = sorted.rbegin(); //ew
